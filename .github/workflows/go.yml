@@ -1,0 +1,47 @@
+import (
+	"fmt"
+	"github.com/bougou/go-ipmi"
+)
+
+func main() {
+	host := "10.0.0.1"
+	port := 623
+	username := "root"
+	password := "123456"
+
+	client, err := ipmi.NewClient(host, port, username, password)
+	// Support local mode client if runs directly on linux
+	// client, err := ipmi.NewOpenClient()
+	if err != nil {
+		panic(err)
+	}
+
+	// you can optionally open debug switch
+	// client.WithDebug(true)
+
+	// you can set interface type, enum range: open/lan/lanplus/tool, default open
+	// client.WithInterface(ipmi.InterfaceLanplus)
+
+	// !!! Note !!!,
+	// From v0.6.0, all IPMI command methods of the Client accept a context as the first argument.
+	ctx := context.Background()
+
+	// Connect will create an authenticated session for you.
+	if err := client.Connect(ctx); err != nil {
+		panic(err)
+	}
+
+	// Now you can execute other IPMI commands that need authentication.
+
+	res, err := client.GetDeviceID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(res.Format())
+
+	selEntries, err := client.GetSELEntries(ctx, 0)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(ipmi.FormatSELs(selEntries, nil))
+}
